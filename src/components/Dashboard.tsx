@@ -171,15 +171,15 @@ export default function Dashboard() {
     const campaignData = campaignPerformance.map(c => ({
       'Campaign': c.campaignName,
       'Status': c.status,
-      'Total Leads': c.totalLeads,
-      'Emails Sent': c.totalEmailsSent,
-      'Opens': c.emailOpens,
-      'Open Rate %': c.emailOpenRate,
-      'Clicks': c.emailClicks,
-      'CTR %': c.emailCTR,
-      'Replies': c.emailReplies,
-      'Reply Rate %': c.emailReplyRate,
-      'Meetings': c.meetingsBooked,
+      'Total Leads': c.leads,
+      'Emails Sent': c.emailsSent,
+      'Opens': c.opens,
+      'Open Rate %': c.openRate,
+      'Clicks': c.clicks,
+      'Replies': c.replies,
+      'Reply Rate %': c.replyRate,
+      'Bounce Rate %': c.bounceRate,
+      'Meetings': c.meetings,
     }));
     downloadCSV(campaignData, 'all_campaigns_data');
   };
