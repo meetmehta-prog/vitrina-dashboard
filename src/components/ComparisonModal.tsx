@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { downloadCSV, exportChartsToPDF } from '@/lib/exportUtils';
+import { downloadCSV, exportComparisonToPDF } from '@/lib/exportUtils';
 
 interface ComparisonModalProps {
   campaignIds: string[];
@@ -126,7 +126,8 @@ export default function ComparisonModal({ campaignIds, onClose }: ComparisonModa
   };
 
   const handleExportPDF = () => {
-    exportChartsToPDF('comparison-modal-content', 'campaign_comparison');
+    if (!comparisonData) return;
+    exportComparisonToPDF(comparisonData, 'campaign_comparison');
   };
 
   const renderOverviewChart = () => {
@@ -367,13 +368,14 @@ export default function ComparisonModal({ campaignIds, onClose }: ComparisonModa
                             <th>Metric</th>
                             {comparisonData.campaigns.map((campaign, index) => (
                               <th key={campaign.id}>
-                                <span 
-                                  className="campaign-color-dot" 
+                                <span
+                                  className="campaign-color-dot"
                                   style={{ background: CAMPAIGN_COLORS[index] }}
                                 ></span>
                                 {campaign.name}
                               </th>
                             ))}
+                            <th>Best</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -385,26 +387,43 @@ export default function ComparisonModal({ campaignIds, onClose }: ComparisonModa
                             ['CTR', 'ctr', true],
                             ['Replies', 'replies', false],
                             ['Reply Rate', 'replyRate', true],
-                          ].map(([label, key, isPercent]) => (
-                            <tr key={key as string}>
-                              <td><strong>{label}</strong></td>
-                              {comparisonData.campaigns.map(campaign => {
-                                const step = campaign.steps[i];
-                                if (step) {
-                                  const value = step[key as keyof typeof step] || 0;
-                                  return (
-                                    <td key={campaign.id}>
-                                      {formatNumber(typeof value === 'number' ? value : parseFloat(value.toString()))}{isPercent ? '%' : ''}
-                                    </td>
-                                  );
-                                } else {
-                                  return (
-                                    <td key={campaign.id} className="null-value">N/A</td>
-                                  );
-                                }
-                              })}
-                            </tr>
-                          ))}
+                          ].map(([label, key, isPercent]) => {
+                            // Get all valid values for this step
+                            const validCampaigns = comparisonData.campaigns.filter(c => c.steps[i]);
+                            if (validCampaigns.length === 0) return null;
+
+                            // Find best performer for this metric
+                            const bestCampaign = validCampaigns.reduce((best, current) => {
+                              const bestValue = best.steps[i][key as keyof typeof best.steps[0]] || 0;
+                              const currentValue = current.steps[i][key as keyof typeof current.steps[0]] || 0;
+                              return currentValue > bestValue ? current : best;
+                            });
+                            const bestValue = bestCampaign.steps[i][key as keyof typeof bestCampaign.steps[0]] || 0;
+
+                            return (
+                              <tr key={key as string}>
+                                <td><strong>{label}</strong></td>
+                                {comparisonData.campaigns.map(campaign => {
+                                  const step = campaign.steps[i];
+                                  if (step) {
+                                    const rawValue = step[key as keyof typeof step] || 0;
+                                    const value = typeof rawValue === 'number' ? rawValue : parseFloat(rawValue.toString());
+                                    const isBest = value === bestValue && bestValue > 0;
+                                    return (
+                                      <td key={campaign.id} className={isBest ? 'best-performer' : ''}>
+                                        {formatNumber(value)}{isPercent ? '%' : ''}
+                                      </td>
+                                    );
+                                  } else {
+                                    return (
+                                      <td key={campaign.id} className="null-value">N/A</td>
+                                    );
+                                  }
+                                })}
+                                <td>{bestCampaign.name}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
