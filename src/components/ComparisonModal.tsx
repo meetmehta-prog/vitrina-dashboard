@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { downloadCSV, exportChartsToPDF } from '@/lib/exportUtils';
 
 interface ComparisonModalProps {
   campaignIds: string[];
@@ -98,6 +99,35 @@ export default function ComparisonModal({ campaignIds, onClose }: ComparisonModa
 
   const formatNumber = (num: number) => num.toLocaleString();
   const formatPercentage = (num: number) => `${num.toFixed(1)}%`;
+
+  const handleExportCSV = () => {
+    if (!comparisonData) return;
+
+    const csvData = comparisonData.campaigns.flatMap(campaign =>
+      campaign.steps.map((step, index) => ({
+        'Campaign': campaign.name,
+        'Step': index + 1,
+        'Sent': step.uniqueLeadsSent,
+        'Opens': step.opens,
+        'Open Rate %': step.openRate,
+        'Clicks': step.clicks,
+        'CTR %': step.ctr,
+        'Replies': step.replies,
+        'Reply Rate %': step.replyRate,
+        'Total Leads': campaign.overview.totalLeads,
+        'Total Emails': campaign.overview.totalEmailsSent,
+        'Overall Open Rate %': campaign.overview.emailOpenRate,
+        'Overall Reply Rate %': campaign.overview.emailReplyRate,
+        'Meetings': campaign.overview.meetingsBooked,
+      }))
+    );
+
+    downloadCSV(csvData, 'campaign_comparison');
+  };
+
+  const handleExportPDF = () => {
+    exportChartsToPDF('comparison-modal-content', 'campaign_comparison');
+  };
 
   const renderOverviewChart = () => {
     if (!comparisonData) return null;
@@ -197,16 +227,16 @@ export default function ComparisonModal({ campaignIds, onClose }: ComparisonModa
           <button className="close-comparison" onClick={onClose}>×</button>
           <h2>📊 Campaign Comparison</h2>
           <div className="comparison-header-actions">
-            <button className="export-btn" onClick={() => alert('CSV export coming soon!')}>
+            <button className="export-btn" onClick={handleExportCSV}>
               📥 Export CSV
             </button>
-            <button className="export-btn" onClick={() => alert('PDF export coming soon!')}>
+            <button className="export-btn" onClick={handleExportPDF}>
               📄 Export PDF
             </button>
           </div>
         </div>
-        
-        <div className="comparison-content">
+
+        <div className="comparison-content" id="comparison-modal-content">
           {loading && (
             <div className="text-center py-12">
               <div className="spinner mx-auto mb-4"></div>

@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { downloadCSV, exportChartsToPDF } from '@/lib/exportUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -192,6 +193,40 @@ export default function CampaignDetailModal({ isOpen, onClose, campaignId }: Cam
       title: '',
       campaignId: ''
     });
+  };
+
+  const handleExportLeadsCSV = () => {
+    if (!campaignDetails) return;
+    downloadCSV(campaignDetails.leads, `${campaignDetails.name}_leads`);
+  };
+
+  const handleExportRepliesCSV = () => {
+    if (!campaignDetails) return;
+    downloadCSV(campaignDetails.replies, `${campaignDetails.name}_replies`);
+  };
+
+  const handleExportActivitiesCSV = () => {
+    if (!campaignDetails) return;
+    downloadCSV(campaignDetails.activities, `${campaignDetails.name}_activities`);
+  };
+
+  const handleExportMeetingsCSV = () => {
+    if (!campaignDetails) return;
+    downloadCSV(campaignDetails.meetings, `${campaignDetails.name}_meetings`);
+  };
+
+  const handleExportStepsCSV = () => {
+    if (!campaignDetails) return;
+    downloadCSV(campaignDetails.steps, `${campaignDetails.name}_steps`);
+  };
+
+  const handleExportAllDataCSV = () => {
+    if (!campaignDetails) return;
+    handleExportStepsCSV();
+    setTimeout(() => handleExportLeadsCSV(), 100);
+    setTimeout(() => handleExportRepliesCSV(), 200);
+    setTimeout(() => handleExportActivitiesCSV(), 300);
+    setTimeout(() => handleExportMeetingsCSV(), 400);
   };
 
   const renderCharts = () => {
@@ -471,6 +506,11 @@ export default function CampaignDetailModal({ isOpen, onClose, campaignId }: Cam
             <span>{campaignDetails?.status}</span>
             <span>{campaignDetails?.createdAt}</span>
             <span>{campaignDetails?.sender}</span>
+          </div>
+          <div className="detail-header-actions">
+            <button className="export-btn" onClick={handleExportAllDataCSV} title="Export all data as CSV">
+              📥 Export All CSV
+            </button>
           </div>
         </div>
         <div className="detail-content">

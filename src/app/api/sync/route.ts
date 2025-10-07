@@ -14,7 +14,16 @@ import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   const startTime = new Date();
-  
+
+  // Prevent sync on production to avoid serverless function timeout
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL || process.env.NETLIFY) {
+    return NextResponse.json({
+      success: false,
+      error: 'Sync is disabled on production. Data is automatically synced during deployment.',
+      message: 'Please use the Refresh button to reload the current data.'
+    }, { status: 403 });
+  }
+
   try {
     // Create sync log entry
     const [syncLog] = await db.insert(dataSyncLog).values({
