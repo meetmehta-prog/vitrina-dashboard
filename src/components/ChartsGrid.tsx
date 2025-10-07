@@ -77,14 +77,16 @@ export default function ChartsGrid({
   };
 
   const handleExportStepCSV = () => {
-    const data = stepPerformanceData.map(step => ({
-      'Step': step.step,
-      'Sent': step.sent,
-      'Open Rate %': step.openRate,
-      'Click Rate %': step.clickRate,
-      'Reply Rate %': step.replyRate,
-      'Remaining Leads': step.remainingLeads
-    }));
+    const data = formatStepPerformanceForCSV(stepPerformanceData.map(step => ({
+      step: step.step.toString(),
+      sent: step.sent,
+      opens: step.opens,
+      openRate: step.openRate,
+      clicks: step.clicks,
+      ctr: step.ctr,
+      replies: step.replies,
+      replyRate: step.replyRate
+    })));
     downloadCSV(data, 'step_performance');
   };
 
