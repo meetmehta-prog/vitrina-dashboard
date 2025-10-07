@@ -9,6 +9,13 @@ import ActivityFeed from './ActivityFeed';
 import CampaignDetailModal from './CampaignDetailModal';
 import ComparisonModal from './ComparisonModal';
 import LoadingSpinner from './LoadingSpinner';
+import {
+  downloadCSV,
+  exportDashboardToPDF,
+  formatCampaignOverviewForCSV,
+  formatStepPerformanceForCSV,
+  formatTimelineForCSV
+} from '@/lib/exportUtils';
 
 import {
   DashboardData,
@@ -159,6 +166,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleExportAllData = () => {
+    // Export campaign performance data
+    const campaignData = campaignPerformance.map(c => ({
+      'Campaign': c.campaignName,
+      'Status': c.status,
+      'Total Leads': c.totalLeads,
+      'Emails Sent': c.totalEmailsSent,
+      'Opens': c.emailOpens,
+      'Open Rate %': c.emailOpenRate,
+      'Clicks': c.emailClicks,
+      'CTR %': c.emailCTR,
+      'Replies': c.emailReplies,
+      'Reply Rate %': c.emailReplyRate,
+      'Meetings': c.meetingsBooked,
+    }));
+    downloadCSV(campaignData, 'all_campaigns_data');
+  };
+
+  const handleExportDashboard = () => {
+    exportDashboardToPDF('vitrina_dashboard');
+  };
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -168,28 +197,47 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container">
+    <div className="container dashboard-container">
       {/* Header */}
       <div className="header">
         <h1>📊 Vitrina Analytics Dashboard</h1>
         <div className="last-updated">
           <span>Last Updated: <span id="lastUpdated">{lastUpdated}</span></span>
-          <button 
-            className="refresh-btn" 
-            onClick={loadDashboard} 
+          <button
+            className="refresh-btn"
+            onClick={handleExportAllData}
+            disabled={refreshing}
+            title="Export all campaign data as CSV"
+          >
+            📥 Export CSV
+          </button>
+          <button
+            className="refresh-btn"
+            onClick={handleExportDashboard}
+            disabled={refreshing}
+            title="Export dashboard as PDF"
+          >
+            📄 Export PDF
+          </button>
+          <button
+            className="refresh-btn"
+            onClick={loadDashboard}
             disabled={refreshing}
           >
             🔄 Refresh
           </button>
-          <button 
-            className="refresh-btn" 
-            onClick={handleSyncData} 
-            disabled={refreshing}
-          >
-            🔄 Sync Data
-          </button>
-          <button 
-            className="refresh-btn" 
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              className="refresh-btn"
+              onClick={handleSyncData}
+              disabled={refreshing}
+              title="Sync data from Lemlist API (Development only)"
+            >
+              🔄 Sync Data
+            </button>
+          )}
+          <button
+            className="refresh-btn"
             onClick={() => signOut()}
           >
             🚪 Sign Out

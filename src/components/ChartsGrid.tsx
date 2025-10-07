@@ -21,6 +21,12 @@ import {
   ReplyTimelineData,
   LeadStatusBreakdown
 } from '@/types';
+import {
+  downloadCSV,
+  exportChartsToPDF,
+  formatStepPerformanceForCSV,
+  formatTimelineForCSV
+} from '@/lib/exportUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -47,7 +53,79 @@ export default function ChartsGrid({
   replyTimelineData,
   leadStatusData
 }: ChartsGridProps) {
-  
+
+  // Export handlers
+  const handleExportFunnelCSV = () => {
+    if (!funnelData) return;
+    const data = [{
+      'Stage': 'Emails Sent',
+      'Count': funnelData.emailsSent
+    }, {
+      'Stage': 'Opens',
+      'Count': funnelData.opens
+    }, {
+      'Stage': 'Clicks',
+      'Count': funnelData.clicks
+    }, {
+      'Stage': 'Replies',
+      'Count': funnelData.replies
+    }, {
+      'Stage': 'Meetings',
+      'Count': funnelData.meetings
+    }];
+    downloadCSV(data, 'conversion_funnel');
+  };
+
+  const handleExportStepCSV = () => {
+    const data = formatStepPerformanceForCSV(stepPerformanceData.map(step => ({
+      step: step.step.toString(),
+      sent: step.sent,
+      opens: step.opens,
+      openRate: step.openRate,
+      clicks: step.clicks,
+      ctr: step.ctr,
+      replies: step.replies,
+      replyRate: step.replyRate
+    })));
+    downloadCSV(data, 'step_performance');
+  };
+
+  const handleExportTimelineCSV = () => {
+    const data = formatTimelineForCSV(replyTimelineData);
+    downloadCSV(data, 'reply_timeline');
+  };
+
+  const handleExportLeadStatusCSV = () => {
+    if (!leadStatusData) return;
+    const data = [{
+      'Status': 'Active',
+      'Count': leadStatusData.active
+    }, {
+      'Status': 'Replied',
+      'Count': leadStatusData.replied
+    }, {
+      'Status': 'Interested',
+      'Count': leadStatusData.interested
+    }, {
+      'Status': 'Bounced',
+      'Count': leadStatusData.bounced
+    }, {
+      'Status': 'Unsubscribed',
+      'Count': leadStatusData.unsubscribed
+    }, {
+      'Status': 'Not Interested',
+      'Count': leadStatusData.not_interested
+    }];
+    downloadCSV(data, 'lead_status_distribution');
+  };
+
+  const handleExportAllChartsCSV = () => {
+    handleExportFunnelCSV();
+    setTimeout(() => handleExportStepCSV(), 100);
+    setTimeout(() => handleExportTimelineCSV(), 200);
+    setTimeout(() => handleExportLeadStatusCSV(), 300);
+  };
+
   // Funnel Chart Data
   const funnelChartData = funnelData ? {
     labels: ['Emails Sent', 'Opens', 'Clicks', 'Replies', 'Meetings'],
@@ -216,7 +294,16 @@ export default function ChartsGrid({
     <div className="charts-grid">
       {/* Funnel Chart */}
       <div className="chart-card">
-        <h3>📈 Conversion Funnel</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3>📈 Conversion Funnel</h3>
+          <button
+            onClick={handleExportFunnelCSV}
+            className="refresh-btn"
+            style={{ fontSize: '12px', padding: '4px 8px' }}
+          >
+            📥 CSV
+          </button>
+        </div>
         <div className="chart-container">
           {funnelChartData ? (
             <Bar data={funnelChartData} options={chartOptions} />
@@ -230,7 +317,16 @@ export default function ChartsGrid({
 
       {/* Step Performance Chart */}
       <div className="chart-card">
-        <h3>📧 Step Performance</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3>📧 Step Performance</h3>
+          <button
+            onClick={handleExportStepCSV}
+            className="refresh-btn"
+            style={{ fontSize: '12px', padding: '4px 8px' }}
+          >
+            📥 CSV
+          </button>
+        </div>
         <div className="chart-container">
           {stepPerformanceData.length > 0 ? (
             <Bar data={stepChartData as any} options={stepChartOptions} />
@@ -244,7 +340,16 @@ export default function ChartsGrid({
 
       {/* Reply Timeline Chart */}
       <div className="chart-card">
-        <h3>💬 Reply Timeline</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3>💬 Reply Timeline</h3>
+          <button
+            onClick={handleExportTimelineCSV}
+            className="refresh-btn"
+            style={{ fontSize: '12px', padding: '4px 8px' }}
+          >
+            📥 CSV
+          </button>
+        </div>
         <div className="chart-container">
           {replyTimelineData.length > 0 ? (
             <Line data={timelineChartData} options={chartOptions} />
@@ -258,7 +363,16 @@ export default function ChartsGrid({
 
       {/* Lead Status Distribution */}
       <div className="chart-card">
-        <h3>👥 Lead Status Distribution</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3>👥 Lead Status Distribution</h3>
+          <button
+            onClick={handleExportLeadStatusCSV}
+            className="refresh-btn"
+            style={{ fontSize: '12px', padding: '4px 8px' }}
+          >
+            📥 CSV
+          </button>
+        </div>
         <div className="chart-container">
           {leadStatusChartData ? (
             <Doughnut data={leadStatusChartData} options={chartOptions} />
