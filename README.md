@@ -2,6 +2,8 @@
 
 A powerful analytics dashboard for Lemlist campaigns, built with Next.js and PostgreSQL.
 
+🚀 **Live Demo**: [https://vitrina-dashboard-rzxq.vercel.app](https://vitrina-dashboard-rzxq.vercel.app)
+
 ## Features
 
 - 📊 Real-time campaign analytics
