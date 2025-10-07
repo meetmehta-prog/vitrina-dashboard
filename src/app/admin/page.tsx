@@ -1,22 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: number;
   email: string;
   name: string | null;
   isActive: boolean;
+  isAdmin: boolean;
   createdAt: string;
   lastLogin: string | null;
 }
 
 export default function AdminPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [newEmail, setNewEmail] = useState('');
   const [newName, setNewName] = useState('');
   const [message, setMessage] = useState('');
+
+  // Check if user is admin
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+      return;
+    }
+
+    if (status === 'authenticated' && !(session.user as any)?.isAdmin) {
+      router.push('/');
+      return;
+    }
+  }, [status, session, router]);
 
   const loadUsers = async () => {
     try {
@@ -183,6 +203,7 @@ export default function AdminPage() {
                     <tr className="bg-gray-100">
                       <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Role</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Created</th>
                       <th className="border border-gray-300 px-4 py-2 text-left">Last Login</th>
@@ -200,8 +221,17 @@ export default function AdminPage() {
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            user.isActive 
-                              ? 'bg-green-100 text-green-800' 
+                            user.isAdmin
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {user.isAdmin ? '👑 Admin' : '👤 User'}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.isActive
+                              ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
                             {user.isActive ? '✅ Active' : '❌ Inactive'}
@@ -247,10 +277,11 @@ export default function AdminPage() {
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-blue-800 mb-2">📝 How to use:</h3>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Add new users by entering their email address</li>
-              <li>• Users can access the dashboard at <code className="bg-blue-100 px-1 rounded">http://localhost:3000</code></li>
+              <li>• Add new users by entering their Gmail/G-Suite email address</li>
+              <li>• Users sign in with their Google account</li>
               <li>• Only active users can sign in to the dashboard</li>
-              <li>• Authentication is email-only (no password required)</li>
+              <li>• Only <strong>mehtameet005@gmail.com</strong> has admin access</li>
+              <li>• Admins can manage user access and permissions</li>
               <li>• Deactivate users to revoke access without deleting them</li>
             </ul>
           </div>

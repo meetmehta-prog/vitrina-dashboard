@@ -182,6 +182,7 @@ export const allowedUsers = pgTable('allowed_users', {
   email: text('email').notNull().unique(),
   name: text('name'),
   isActive: boolean('is_active').default(true),
+  isAdmin: boolean('is_admin').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   lastLogin: timestamp('last_login'),
 }, (table) => ({

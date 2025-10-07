@@ -1,21 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { db } from '@/lib/db';
 import { allowedUsers } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
+// Helper function to check if user is admin
+async function isAdmin() {
+  const session = await getServerSession();
+
+  if (!session || !session.user?.email) {
+    return false;
+  }
+
+  const user = await db
+    .select()
+    .from(allowedUsers)
+    .where(eq(allowedUsers.email, session.user.email.toLowerCase()))
+    .limit(1);
+
+  return user.length > 0 && user[0].isAdmin;
+}
+
 // GET - List all allowed users
 export async function GET() {
   try {
+    // Check if user is admin
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const users = await db.select().from(allowedUsers);
-    
+
     return NextResponse.json({
       users: users.map(user => ({
         id: user.id,
         email: user.email,
         name: user.name,
         isActive: user.isActive,
+        isAdmin: user.isAdmin,
         createdAt: user.createdAt,
         lastLogin: user.lastLogin
       }))
@@ -29,6 +53,11 @@ export async function GET() {
 // POST - Add a new allowed user
 export async function POST(request: NextRequest) {
   try {
+    // Check if user is admin
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const { email, name } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -76,6 +105,11 @@ export async function POST(request: NextRequest) {
 // PUT - Update user status (activate/deactivate)
 export async function PUT(request: NextRequest) {
   try {
+    // Check if user is admin
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const { email, isActive, name } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -122,6 +156,11 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remove user
 export async function DELETE(request: NextRequest) {
   try {
+    // Check if user is admin
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
 
