@@ -19,18 +19,7 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  cookies: {
-    pkceCodeVerifier: {
-      name: 'next-auth.pkce.code_verifier',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
-      },
-    },
-  },
-  useSecureCookies: true,
+  trustHost: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
