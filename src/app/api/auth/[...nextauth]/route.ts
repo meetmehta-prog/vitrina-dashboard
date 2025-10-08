@@ -19,7 +19,6 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  trustHost: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
