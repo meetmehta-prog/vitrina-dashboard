@@ -11,11 +11,6 @@ const nextConfig = {
     return config;
   },
 
-  // Optimize production builds
-  experimental: {
-    optimizeCss: true,
-  },
-
   // Headers for security
   async headers() {
     return [
